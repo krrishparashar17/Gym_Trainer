@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Gym Trainer</title>
+    <style>
+        :root {
+            --primary: #ff5722;
+            --primary-light: #ff7043;
+            --secondary: #29b6f6;
+            --light: #f5f5f5;
+            --dark: #121212;
+            --dark-surface: #1e1e1e;
+            --dark-card: #242424;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ffc107;
+            --text-primary: #f5f5f5;
+            --text-secondary: #b0b0b0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(18, 18, 18, 0.85);
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.2;
+            z-index: 0;
+        }
+        
+        header h1, header p {
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background-color: var(--dark-card);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.3);
+        }
+        
+        input[type="radio"], input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background: #03a9f4;
+            box-shadow: 0 5px 15px rgba(41, 182, 246, 0.4);
+        }
+        
+        .result-card {
+            background-color: rgba(36, 36, 36, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .result-card h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .info-box {
+            background-color: rgba(41, 182, 246, 0.1);
+            border-left: 4px solid var(--secondary);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .warning-box {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .success-box {
+            background-color: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .progress-container {
+            margin: 30px 0;
+            background-color: rgba(30, 30, 30, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .progress-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 30px;
+            height: 15px;
+            width: 2px;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .step-number {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .step-active .step-number {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 87, 34, 0.5);
+        }
+        
+        .step-text {
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+        
+        .step-active .step-text {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .workout-plan {
+            margin: 20px 0;
+        }
+        
+        .workout-day {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: rgba(36, 36, 36, 0.8);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .workout-day:hover {
+            transform: translateX(5px);
+            background-color: rgba(36, 36, 36, 1);
+        }
+        
+        .workout-day h4 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .workout-day h4::after {
+            content: '▼';
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .workout-day.collapsed h4::after {
+            transform: rotate(-90deg);
+        }
+        
+        .exercise-list {
+            transition: all 0.3s ease;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        
+        .workout-day.collapsed .exercise-list {
+            max-height: 0;
+        }
+        
+        .exercise {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .exercise-name {
+            font-weight: 600;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .exercise-details {
+            display: flex;
+            gap: 15px;
+            color: var(--text-secondary);
+        }
+        
+        .exercise-weight {
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        .exercise-reps {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .meal-plan {
+            margin: 20px 0;
+        }
+        
+        .meal {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: rgba(36, 36, 36, 0.8);
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .meal:hover {
+            transform: translateX(5px);
+            background-color: rgba(36, 36, 36, 1);
+        }
+        
+        .meal h4 {
+            margin-bottom: 15px;
+            color: var(--success);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .meal h4::after {
+            content: '▼';
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .meal.collapsed h4::after {
+            transform: rotate(-90deg);
+        }
+        
+        .meal-content {
+            transition: all 0.3s ease;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        
+        .meal.collapsed .meal-content {
+            max-height: 0;
+        }
+        
+        .food-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .food-name {
+            flex: 2;
+        }
+        
+        .food-macros {
+            flex: 1;
+            text-align: right;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .bmi-meter-container {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: rgba(36, 36, 36, 0.8);
+            border-radius: 10px;
+        }
+        
+        .bmi-meter {
+    height: 30px;
+    background: linear-gradient(to right, 
+        var(--danger) 0%, 
+        var(--danger) 10.4%, /* 18.5 BMI position: (18.5-16)/(40-16)*100 = 10.4% */
+        var(--success) 10.4%, 
+        var(--success) 37.5%, /* 25 BMI position: (25-16)/(40-16)*100 = 37.5% */
+        var(--warning) 37.5%, 
+        var(--warning) 58.3%, /* 30 BMI position: (30-16)/(40-16)*100 = 58.3% */
+        var(--danger) 58.3%, 
+        var(--danger) 100%);
+    border-radius: 15px;
+    margin: 20px 0;
+    position: relative;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+        
+        .bmi-marker {
+            width: 4px;
+            height: 40px;
+            background-color: white;
+            position: absolute;
+            top: -5px;
+            transform: translateX(-50%);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+        
+        .bmi-marker::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid white;
+        }
+        
+        .bmi-value-indicator {
+            position: absolute;
+            top: -35px;
+            transform: translateX(-50%);
+            background-color: white;
+            color: var(--dark);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .bmi-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            position: relative;
+        }
+        
+        .bmi-label {
+            position: absolute;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        
+        .bmi-label:nth-child(1) {
+    left: 5.2%; /* Center of underweight: (0+10.4)/2 = 5.2% */
+    color: var(--danger);
+}
+
+.bmi-label:nth-child(2) {
+    left: 24%; /* Center of normal: (10.4+37.5)/2 = 24% */
+    color: var(--success);
+}
+
+.bmi-label:nth-child(3) {
+    left: 48%; /* Center of overweight: (37.5+58.3)/2 = 48% */
+    color: var(--warning);
+}
+
+.bmi-label:nth-child(4) {
+    left: 79%; /* Center of obese: (58.3+100)/2 = 79% */
+    color: var(--danger);
+}
+
+        
+        .bmi-ticks {
+            position: relative;
+            height: 10px;
+            margin-top: 5px;
+        }
+        
+        .bmi-tick {
+            position: absolute;
+            height: 10px;
+            width: 2px;
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateX(-50%);
+        }
+        
+        .bmi-tick::after {
+            content: attr(data-value);
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .bmi-tick:nth-child(1) { left: 0%; } /* BMI 16 */
+.bmi-tick:nth-child(2) { left: 10.4%; } /* BMI 18.5 */
+.bmi-tick:nth-child(3) { left: 37.5%; } /* BMI 25 */
+.bmi-tick:nth-child(4) { left: 58.3%; } /* BMI 30 */
+.bmi-tick:nth-child(5) { left: 100%; } /* BMI 40 */
+
+        
+        .weight-recommendation {
+            background-color: rgba(41, 182, 246, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .weight-recommendation h4 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .exercise-recommendation {
+            background-color: rgba(255, 87, 34, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .exercise-recommendation h4 {
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.weight-reps-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.weight-reps-table th, 
+.weight-reps-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.weight-reps-table th {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.weight-reps-table tr:last-child td {
+    border-bottom: none;
+}
+
+.weight-reps-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.weight-reps-table .goal-strength {
+    color: var(--primary);
+}
+
+.weight-reps-table .goal-hypertrophy {
+    color: var(--secondary);
+}
+
+.weight-reps-table .goal-endurance {
+    color: var(--success);
+}
+
+.continue-btn {
+    display: block;
+    margin: 20px auto 10px;
+    background: var(--secondary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.continue-btn:hover {
+    background: #03a9f4;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(41, 182, 246, 0.4);
+}
+
+.interactive-exercise {
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: rgba(36, 36, 36, 0.8);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.interactive-exercise:hover {
+    transform: translateX(5px);
+    background-color: rgba(36, 36, 36, 1);
+}
+
+.interactive-exercise h4 {
+    margin-bottom: 15px;
+    color: var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.exercise-details-expanded {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease;
+}
+
+.interactive-exercise.active .exercise-details-expanded {
+    max-height: 500px;
+}
+
+.exercise-video-placeholder {
+    width: 100%;
+    height: 200px;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.exercise-video-placeholder::before {
+    content: '▶';
+    font-size: 40px;
+    color: rgba(255, 255, 255, 0.7);
+    position: absolute;
+    transition: all 0.3s ease;
+}
+
+.exercise-video-placeholder:hover::before {
+    color: var(--primary);
+    transform: scale(1.2);
+}
+
+.exercise-form-tips {
+    margin-bottom: 15px;
+}
+
+.exercise-form-tips h5 {
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.exercise-form-tips ul {
+    padding-left: 20px;
+}
+
+.exercise-form-tips li {
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.weight-selector {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.weight-selector label {
+    margin-right: 15px;
+    margin-bottom: 0;
+    min-width: 120px;
+}
+
+.weight-input {
+    display: flex;
+    align-items: center;
+}
+
+.weight-input button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.weight-input button:hover {
+    background-color: var(--primary);
+}
+
+.weight-input input {
+    width: 80px;
+    text-align: center;
+    margin: 0 10px;
+    padding: 8px;
+}
+
+.rep-range {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.meal-interactive {
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: rgba(36, 36, 36, 0.8);
+    border-radius: 8px;
+    border-left: 4px solid var(--success);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.meal-interactive:hover {
+    transform: translateX(5px);
+    background-color: rgba(36, 36, 36, 1);
+}
+
+.meal-interactive h4 {
+    margin-bottom: 15px;
+    color: var(--success);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.meal-interactive h4::after {
+    content: '▼';
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.meal-interactive.collapsed h4::after {
+    transform: rotate(-90deg);
+}
+
+.meal-content-expanded {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease;
+}
+
+.meal-interactive.active .meal-content-expanded {
+    max-height: 500px;
+}
+
+.food-item-detailed {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.food-item-detailed:last-child {
+    border-bottom: none;
+}
+
+.food-name-detailed {
+    flex: 2;
+    min-width: 200px;
+}
+
+.food-macros-detailed {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    min-width: 200px;
+}
+
+.macro {
+    text-align: center;
+    padding: 0 10px;
+}
+
+.macro-value {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.macro-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.protein .macro-value {
+    color: var(--primary);
+}
+
+.carbs .macro-value {
+    color: var(--success);
+}
+
+.fat .macro-value {
+    color: var(--warning);
+}
+
+.calories .macro-value {
+    color: var(--secondary);
+}
+
+.nutrition-chart-container {
+    width: 100%;
+    height: 200px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.nutrition-chart-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+}
+
+.loading-dot {
+    width: 12px;
+    height: 12px;
+    margin: 0 5px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    animation: loading 1.5s infinite ease-in-out;
+}
+
+.loading-dot:nth-child(2) {
+    animation-delay: 0.2s;
+    background-color: var(--secondary);
+}
+
+.loading-dot:nth-child(3) {
+    animation-delay: 0.4s;
+    background-color: var(--success);
+}
+
+@keyframes loading {
+    0%, 100% {
+        transform: scale(0.5);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .food-macros-detailed {
+        margin-top: 10px;
+    }
+    
+    .weight-selector {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .weight-selector label {
+        margin-bottom: 10px;
+    }
+    
+    .bmi-labels {
+        font-size: 12px;
+    }
+}
+</style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Gym Trainer</h1>
+            <p class="subtitle">Your personalized fitness and nutrition coach</p>
+        </header>
+        
+        <!-- Progress Tracker -->
+        <div class="progress-container">
+            <div class="progress-step step-active" id="step1-indicator">
+                <div class="step-number">1</div>
+                <div class="step-text">Basic Information</div>
+            </div>
+            <div class="progress-step" id="step2-indicator">
+                <div class="step-number">2</div>
+                <div class="step-text">Fitness Experience</div>
+            </div>
+            <div class="progress-step" id="step3-indicator">
+                <div class="step-number">3</div>
+                <div class="step-text">Workout Analysis</div>
+            </div>
+            <div class="progress-step" id="step4-indicator">
+                <div class="step-number">4</div>
+                <div class="step-text">Nutrition Goals</div>
+            </div>
+            <div class="progress-step" id="step5-indicator">
+                <div class="step-number">5</div>
+                <div class="step-text">Your Plan</div>
+            </div>
+        </div>
+        
+        <!-- Step 1: Basic Information -->
+        <div class="card" id="step1">
+            <h2>Personal Information</h2>
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" placeholder="Enter your name">
+            </div>
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" placeholder="Enter your age" min="16" max="100">
+            </div>
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender">
+                    <option value="">Select your gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="height">Height (cm)</label>
+                <input type="number" id="height" placeholder="Enter your height in centimeters" min="100" max="250">
+            </div>
+            <div class="form-group">
+                <label for="weight">Weight (kg)</label>
+                <input type="number" id="weight" placeholder="Enter your weight in kilograms" min="30" max="300">
+            </div>
+            <button class="btn" id="step1-next">Calculate BMI</button>
+            
+            <div class="result-card hidden" id="bmi-result">
+                <h3>Your BMI Results</h3>
+                <p id="bmi-value"></p>
+                <p id="bmi-category"></p>
+                
+                <div class="bmi-meter-container">
+                    <div class="bmi-meter">
+                        <div class="bmi-marker" id="bmi-marker">
+                            <div class="bmi-value-indicator" id="bmi-value-indicator">25.0</div>
+                        </div>
+                    </div>
+                    <div class="bmi-labels">
+                        <div class="bmi-label">Underweight</div>
+                        <div class="bmi-label">Normal</div>
+                        <div class="bmi-label">Overweight</div>
+                        <div class="bmi-label">Obese</div>
+                    </div>
+                    <div class="bmi-ticks">
+                        <div class="bmi-tick" data-value="16"></div>
+                        <div class="bmi-tick" data-value="18.5"></div>
+                        <div class="bmi-tick" data-value="25"></div>
+                        <div class="bmi-tick" data-value="30"></div>
+                        <div class="bmi-tick" data-value="40"></div>
+                    </div>
+                    
+                </div>
+                
+                <div class="info-box">
+                    <p>BMI is just one indicator of health and doesn't account for factors like muscle mass, age, and gender.</p>
+                </div>
+                
+                <button class="continue-btn" id="bmi-continue">Continue</button>
+            </div>
+        </div>
+        
+        <!-- Step 2: Fitness Experience -->
+        <div class="card hidden" id="step2">
+            <h2>Fitness Experience</h2>
+            <div class="form-group">
+                <label>Do you currently go to the gym?</label>
+                <div>
+                    <input type="radio" id="gym-yes" name="gym-experience" value="yes">
+                    <label for="gym-yes">Yes, I already go to the gym</label>
+                </div>
+                <div>
+                    <input type="radio" id="gym-no" name="gym-experience" value="no">
+                    <label for="gym-no">No, I'll be starting fresh</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="fitness-level">How would you rate your fitness level?</label>
+                <select id="fitness-level">
+                    <option value="">Select your fitness level</option>
+                    <option value="beginner">Beginner (0-6 months)</option>
+                    <option value="intermediate">Intermediate (6 months - 2 years)</option>
+                    <option value="advanced">Advanced (2+ years)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="fitness-goals">What are your primary fitness goals? (Select up to 3)</label>
+                <div>
+                    <input type="checkbox" id="goal-strength" name="fitness-goals" value="strength">
+                    <label for="goal-strength">Build Strength</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="goal-muscle" name="fitness-goals" value="muscle">
+                    <label for="goal-muscle">Build Muscle</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="goal-lose-weight" name="fitness-goals" value="lose-weight">
+                    <label for="goal-lose-weight">Lose Weight</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="goal-endurance" name="fitness-goals" value="endurance">
+                    <label for="goal-endurance">Improve Endurance</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="goal-health" name="fitness-goals" value="health">
+                    <label for="goal-health">Improve Overall Health</label>
+                </div>
+            </div>
+            <button class="btn" id="step2-next">Continue</button>
+        </div>
+        
+        <!-- Step 3: Current Workout (For experienced users) -->
+        <div class="card hidden" id="step3-experienced">
+            <h2>Current Workout Routine</h2>
+            <p>Please share details about your current workout routine so we can analyze and improve it.</p>
+            
+            <div class="form-group">
+                <label for="workout-days">How many days per week do you work out?</label>
+                <select id="workout-days">
+                    <option value="3">3 days</option>
+                    <option value="4">4 days</option>
+                    <option value="5">5 days</option>
+                    <option value="6">6 days</option>
+                    <option value="7">7 days</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="workout-split">What type of workout split do you follow?</label>
+                <select id="workout-split">
+                    <option value="full-body">Full Body</option>
+                    <option value="upper-lower">Upper/Lower</option>
+                    <option value="push-pull-legs">Push/Pull/Legs</option>
+                    <option value="body-part">Body Part Split</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="main-exercises">List your main exercises and current weights/reps</label>
+                <textarea id="main-exercises" rows="6" placeholder="Example:
+Bench Press: 80kg x 8 reps x 3 sets
+Squat: 100kg x 6 reps x 3 sets
+Deadlift: 120kg x 5 reps x 3 sets"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="workout-progress">How has your progress been in the last month?</label>
+                <select id="workout-progress">
+                    <option value="stuck">Stuck (No progress)</option>
+                    <option value="slow">Slow progress</option>
+                    <option value="good">Good progress</option>
+                    <option value="excellent">Excellent progress</option>
+                </select>
+            </div>
+            
+            <button class="btn" id="step3-exp-next">Continue to Nutrition</button>
+        </div>
+        
+        <!-- Step 3: Beginner Workout Introduction -->
+        <div class="card hidden" id="step3-beginner">
+            <h2>Starting Your Fitness Journey</h2>
+            <div class="info-box">
+                <p>Great! We'll create a beginner-friendly workout plan based on your goals and physical condition.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="available-days">How many days per week can you commit to working out?</label>
+                <select id="available-days">
+                    <option value="2">2 days</option>
+                    <option value="3" selected>3 days</option>
+                    <option value="4">4 days</option>
+                    <option value="5">5 days</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="workout-length">How long can you spend in the gym per session?</label>
+                <select id="workout-length">
+                    <option value="30">30 minutes</option>
+                    <option value="45" selected>45 minutes</option>
+                    <option value="60">60 minutes</option>
+                    <option value="90">90 minutes</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Do you have any injuries or medical conditions we should consider?</label>
+                <textarea id="medical-conditions" rows="3" placeholder="Example: Lower back pain, knee issues, etc. (Leave blank if none)"></textarea>
+            </div>
+            
+            <button class="btn" id="step3-beg-next">Continue to Nutrition</button>
+        </div>
+        
+        <!-- Step 4: Nutrition Goals -->
+        <div class="card hidden" id="step4">
+            <h2>Nutrition Goals</h2>
+            <div class="form-group">
+                <label>What is your primary nutrition goal?</label>
+                <div>
+                    <input type="radio" id="goal-bulk" name="nutrition-goal" value="bulk">
+                    <label for="goal-bulk">Bulk (Gain muscle mass)</label>
+                </div>
+                <div>
+                    <input type="radio" id="goal-cut" name="nutrition-goal" value="cut">
+                    <label for="goal-cut">Cut (Lose fat while maintaining muscle)</label>
+                </div>
+                <div>
+                    <input type="radio" id="goal-maintain" name="nutrition-goal" value="maintain">
+                    <label for="goal-maintain">Maintain (Current weight but improve body composition)</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="dietary-preferences">Do you have any dietary preferences?</label>
+                <select id="dietary-preferences">
+                    <option value="none">No specific preferences</option>
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="keto">Keto</option>
+                    <option value="paleo">Paleo</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Do you have any food allergies or intolerances?</label>
+                <textarea id="food-allergies" rows="2" placeholder="Example: Nuts, dairy, gluten, etc. (Leave blank if none)"></textarea>
+            </div>
+            
+            <button class="btn" id="step4-next">Generate My Personalized Plan</button>
+        </div>
+        
+        <!-- Step 5: Final Results - Personalized Plan -->
+        <div class="card hidden" id="step5">
+            <h2>Your Personalized Fitness & Nutrition Plan</h2>
+            <div class="success-box">
+                <p>Based on your information, we've created a customized plan to help you reach your goals efficiently and safely.</p>
+            </div>
+            
+            <div id="user-summary" class="result-card">
+                <h3>Your Profile</h3>
+                <div id="profile-summary"></div>
+            </div>
+            
+            <div id="workout-recommendations" class="result-card">
+                <h3>Workout Recommendations</h3>
+                <div id="workout-analysis"></div>
+                <div class="workout-plan" id="workout-plan"></div>
+            </div>
+            
+            <div id="nutrition-plan" class="result-card">
+                <h3>Nutrition Plan</h3>
+                <div id="nutrition-summary"></div>
+                <div class="meal-plan" id="meal-plan"></div>
+            </div>
+            
+            <div class="info-box">
+                <h4>Next Steps:</h4>
+                <p>1. Save or print this plan for reference</p>
+                <p>2. Start following the workout and nutrition guidelines</p>
+                <p>3. Track your progress and adjust as needed</p>
+                <p>4. Return here after 4-6 weeks for a plan update</p>
+            </div>
+            
+            <button class="btn" id="save-plan">Save My Plan</button>
+            <button class="btn btn-secondary" id="restart">Create New Plan</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const step3Experienced = document.getElementById('step3-experienced');
+            const step3Beginner = document.getElementById('step3-beginner');
+            const step4 = document.getElementById('step4');
+            const step5 = document.getElementById('step5');
+            
+            // Step indicators
+            const step1Indicator = document.getElementById('step1-indicator');
+            const step2Indicator = document.getElementById('step2-indicator');
+            const step3Indicator = document.getElementById('step3-indicator');
+            const step4Indicator = document.getElementById('step4-indicator');
+            const step5Indicator = document.getElementById('step5-indicator');
+            
+            // Buttons
+            const step1NextBtn = document.getElementById('step1-next');
+            const step2NextBtn = document.getElementById('step2-next');
+            const step3ExpNextBtn = document.getElementById('step3-exp-next');
+            const step3BegNextBtn = document.getElementById('step3-beg-next');
+            const step4NextBtn = document.getElementById('step4-next');
+            const savePlanBtn = document.getElementById('save-plan');
+            const restartBtn = document.getElementById('restart');
+            const bmiContinueBtn = document.getElementById('bmi-continue');
+            
+            // User data object
+            let userData = {
+                name: '',
+                age: null,
+                gender: '',
+                height: null,
+                weight: null,
+                bmi: null,
+                bmiCategory: '',
+                gymExperience: '',
+                fitnessLevel: '',
+                fitnessGoals: [],
+                workoutDays: null,
+                workoutSplit: '',
+                exercises: '',
+                progress: '',
+                availableDays: null,
+                workoutLength: null,
+                medicalConditions: '',
+                nutritionGoal: '',
+                dietaryPreferences: '',
+                foodAllergies: ''
+            };
+            
+            // Step 1: Calculate BMI
+            step1NextBtn.addEventListener('click', function() {
+                const name = document.getElementById('name').value;
+                const age = parseInt(document.getElementById('age').value);
+                const gender = document.getElementById('gender').value;
+                const height = parseFloat(document.getElementById('height').value);
+                const weight = parseFloat(document.getElementById('weight').value);
+                
+                // Validate inputs
+                if (!name || !age || !gender || !height || !weight) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+                
+                // Calculate BMI
+                const bmi = calculateBMI(height, weight);
+                const bmiCategory = getBMICategory(bmi);
+                
+                // Display BMI result
+                document.getElementById('bmi-value').textContent = `Your BMI is ${bmi.toFixed(1)}`;
+                document.getElementById('bmi-category').textContent = `Category: ${bmiCategory}`;
+                document.getElementById('bmi-result').classList.remove('hidden');
+                
+                // Position BMI marker
+                const markerPosition = getBMIMarkerPosition(bmi);
+                document.getElementById('bmi-marker').style.left = `${markerPosition}%`;
+                document.getElementById('bmi-value-indicator').textContent = bmi.toFixed(1);
+                
+                // Save user data
+                userData.name = name;
+                userData.age = age;
+                userData.gender = gender;
+                userData.height = height;
+                userData.weight = weight;
+                userData.bmi = bmi;
+                userData.bmiCategory = bmiCategory;
+            });
+            
+            // Continue after BMI calculation
+            bmiContinueBtn.addEventListener('click', function() {
+                step1.classList.add('hidden');
+                step2.classList.remove('hidden');
+                
+                // Update progress indicators
+                step1Indicator.classList.remove('step-active');
+                step2Indicator.classList.add('step-active');
+            });
+            
+            // Step 2: Fitness Experience
+            step2NextBtn.addEventListener('click', function() {
+                const gymExperience = document.querySelector('input[name="gym-experience"]:checked');
+                const fitnessLevel = document.getElementById('fitness-level').value;
+                
+                // Validate inputs
+                if (!gymExperience || !fitnessLevel) {
+                    alert('Please answer all questions');
+                    return;
+                }
+                
+                // Get selected fitness goals
+                const fitnessGoals = [];
+                document.querySelectorAll('input[name="fitness-goals"]:checked').forEach(checkbox => {
+                    fitnessGoals.push(checkbox.value);
+                });
+                
+                if (fitnessGoals.length === 0) {
+                    alert('Please select at least one fitness goal');
+                    return;
+                }
+                
+                // Save user data
+                userData.gymExperience = gymExperience.value;
+                userData.fitnessLevel = fitnessLevel;
+                userData.fitnessGoals = fitnessGoals;
+                
+                // Show appropriate step 3 based on gym experience
+                step2.classList.add('hidden');
+                
+                if (gymExperience.value === 'yes') {
+                    step3Experienced.classList.remove('hidden');
+                } else {
+                    step3Beginner.classList.remove('hidden');
+                }
+                
+                // Update progress indicators
+                step2Indicator.classList.remove('step-active');
+                step3Indicator.classList.add('step-active');
+            });
+            
+            // Step 3 (Experienced): Current Workout
+            step3ExpNextBtn.addEventListener('click', function() {
+                const workoutDays = parseInt(document.getElementById('workout-days').value);
+                const workoutSplit = document.getElementById('workout-split').value;
+                const exercises = document.getElementById('main-exercises').value;
+                const progress = document.getElementById('workout-progress').value;
+                
+                // Validate inputs
+                if (!exercises) {
+                    alert('Please list your current exercises');
+                    return;
+                }
+                
+                // Save user data
+                userData.workoutDays = workoutDays;
+                userData.workoutSplit = workoutSplit;
+                userData.exercises = exercises;
+                userData.progress = progress;
+                
+                // Proceed to step 4
+                step3Experienced.classList.add('hidden');
+                step4.classList.remove('hidden');
+                
+                // Update progress indicators
+                step3Indicator.classList.remove('step-active');
+                step4Indicator.classList.add('step-active');
+            });
+            
+            // Step 3 (Beginner): Starting Workout
+            step3BegNextBtn.addEventListener('click', function() {
+                const availableDays = parseInt(document.getElementById('available-days').value);
+                const workoutLength = parseInt(document.getElementById('workout-length').value);
+                const medicalConditions = document.getElementById('medical-conditions').value;
+                
+                // Save user data
+                userData.availableDays = availableDays;
+                userData.workoutLength = workoutLength;
+                userData.medicalConditions = medicalConditions;
+                
+                // Proceed to step 4
+                step3Beginner.classList.add('hidden');
+                step4.classList.remove('hidden');
+                
+                // Update progress indicators
+                step3Indicator.classList.remove('step-active');
+                step4Indicator.classList.add('step-active');
+            });
+            
+            // Step 4: Nutrition Goals
+            step4NextBtn.addEventListener('click', function() {
+                const nutritionGoal = document.querySelector('input[name="nutrition-goal"]:checked');
+                const dietaryPreferences = document.getElementById('dietary-preferences').value;
+                const foodAllergies = document.getElementById('food-allergies').value;
+                
+                // Validate inputs
+                if (!nutritionGoal) {
+                    alert('Please select a nutrition goal');
+                    return;
+                }
+                
+                // Save user data
+                userData.nutritionGoal = nutritionGoal.value;
+                userData.dietaryPreferences = dietaryPreferences;
+                userData.foodAllergies = foodAllergies;
+                
+                // Generate personalized plan
+                generatePersonalizedPlan(userData);
+                
+                // Proceed to step 5
+                step4.classList.add('hidden');
+                step5.classList.remove('hidden');
+                
+                // Update progress indicators
+                step4Indicator.classList.remove('step-active');
+                step5Indicator.classList.add('step-active');
+            });
+            
+            // Save plan button
+            savePlanBtn.addEventListener('click', function() {
+                alert("This feature would allow users to save or export their plan. For now, please take a screenshot of your plan.");
+            });
+            
+            // Restart button
+            restartBtn.addEventListener('click', function() {
+                location.reload();
+            });
+            
+            // Make workout days collapsible
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.closest('.workout-day')) {
+                    const workoutDay = e.target.closest('.workout-day');
+                    workoutDay.classList.toggle('collapsed');
+                }
+            });
+            
+            // Make meal sections collapsible
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.closest('.meal')) {
+                    const meal = e.target.closest('.meal');
+                    meal.classList.toggle('collapsed');
+                }
+            });
+            
+            // Make interactive exercises expandable
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.closest('.interactive-exercise')) {
+                    const exercise = e.target.closest('.interactive-exercise');
+                    exercise.classList.toggle('active');
+                }
+            });
+            
+            // Weight selector functionality
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('weight-btn')) {
+                    const input = e.target.parentElement.querySelector('input');
+                    const currentValue = parseInt(input.value) || 0;
+                    
+                    if (e.target.classList.contains('weight-decrease')) {
+                        input.value = Math.max(0, currentValue - 2.5);
+                    } else if (e.target.classList.contains('weight-increase')) {
+                        input.value = currentValue + 2.5;
+                    }
+                    
+                    // Update rep recommendations based on weight
+                    updateRepRecommendations(input);
+                }
+            });
+            
+            // === Helper Functions ===
+            
+            // Calculate BMI
+            function calculateBMI(heightCm, weightKg) {
+                // Convert height from cm to meters
+                const heightM = heightCm / 100;
+                // BMI formula: weight(kg) / height(m)²
+                return weightKg / (heightM * heightM);
+            }
+            
+            // Get BMI Category
+            function getBMICategory(bmi) {
+                if (bmi < 18.5) {
+                    return "Underweight";
+                } else if (bmi >= 18.5 && bmi < 25) {
+                    return "Normal weight";
+                } else if (bmi >= 25 && bmi < 30) {
+                    return "Overweight";
+                } else {
+                    return "Obese";
+                }
+            }
+            
+            // Get BMI Marker Position for the visual meter
+            // Get BMI Marker Position for the visual meter
+function getBMIMarkerPosition(bmi) {
+    // Position marker on the BMI scale (0-100%)
+    if (bmi < 16) return 0; // Minimum position
+    if (bmi > 40) return 100; // Maximum position
+    
+    // Map BMI ranges to percentage positions on the meter
+    // Standard BMI ranges: <18.5 (underweight), 18.5-24.9 (normal), 25-29.9 (overweight), ≥30 (obese)
+    // Map 16-40 BMI range to 0-100% position
+    return ((bmi - 16) / (40 - 16)) * 100;
+}
+
+            
+            // Update rep recommendations based on weight
+            function updateRepRecommendations(weightInput) {
+                const weight = parseFloat(weightInput.value);
+                const exerciseType = weightInput.getAttribute('data-exercise');
+                const repElement = document.getElementById(`${exerciseType}-reps`);
+                
+                if (!repElement) return;
+                
+                // Calculate recommended reps based on weight and exercise type
+                let reps;
+                if (exerciseType.includes('bench') || exerciseType.includes('press')) {
+                    reps = Math.max(6, Math.round(100 / weight * 5));
+                } else if (exerciseType.includes('squat') || exerciseType.includes('deadlift')) {
+                    reps = Math.max(5, Math.round(150 / weight * 5));
+                } else {
+                    reps = Math.max(8, Math.round(60 / weight * 5));
+                }
+                
+                // Cap reps at reasonable values
+                reps = Math.min(reps, 15);
+                
+                repElement.textContent = `${reps} reps`;
+            }
+            
+            // Generate Personalized Plan
+            function generatePersonalizedPlan(userData) {
+                // Generate profile summary
+                generateProfileSummary(userData);
+                
+                // Generate workout plan based on experience
+                if (userData.gymExperience === 'yes') {
+                    generateExperiencedWorkoutPlan(userData);
+                } else {
+                    generateBeginnerWorkoutPlan(userData);
+                }
+                
+                // Generate nutrition plan
+                generateNutritionPlan(userData);
+            }
+            
+            // Generate Profile Summary
+            function generateProfileSummary(userData) {
+                const profileSummary = document.getElementById('profile-summary');
+                
+                profileSummary.innerHTML = `
+                    <p><strong>Name:</strong> ${userData.name}</p>
+                    <p><strong>Age:</strong> ${userData.age}</p>
+                    <p><strong>Gender:</strong> ${userData.gender}</p>
+                    <p><strong>Height:</strong> ${userData.height} cm</p>
+                    <p><strong>Weight:</strong> ${userData.weight} kg</p>
+                    <p><strong>BMI:</strong> ${userData.bmi.toFixed(1)} (${userData.bmiCategory})</p>
+                    <p><strong>Fitness Level:</strong> ${userData.fitnessLevel}</p>
+                    <p><strong>Goals:</strong> ${userData.fitnessGoals.join(', ')}</p>
+                `;
+            }
+            
+            // Generate Experienced Workout Plan
+            function generateExperiencedWorkoutPlan(userData) {
+                const workoutAnalysis = document.getElementById('workout-analysis');
+                const workoutPlan = document.getElementById('workout-plan');
+                
+                // Analyze current workout
+                let analysisText = '';
+                if (userData.progress === 'stuck') {
+                    analysisText = `<p>Based on your current routine, we've identified that you may be experiencing a plateau. We recommend adjusting your workout intensity and incorporating more progressive overload.</p>`;
+                } else if (userData.progress === 'slow') {
+                    analysisText = `<p>Your progress has been slow but steady. We'll optimize your current ${userData.workoutSplit} split to help you break through plateaus.</p>`;
+                } else {
+                    analysisText = `<p>You're making good progress with your current routine. We'll provide some tweaks to help you continue advancing.</p>`;
+                }
+                
+                workoutAnalysis.innerHTML = analysisText;
+                
+                // Generate workout plan based on split type and goals
+                let planHTML = '';
+                
+                if (userData.nutritionGoal === 'bulk') {
+                    planHTML += `<div class="info-box">
+                        <p>Since your goal is to build muscle mass, this plan focuses on compound movements with moderate to heavy weights and hypertrophy-specific training.</p>
+                    </div>`;
+                } else if (userData.nutritionGoal === 'cut') {
+                    planHTML += `<div class="info-box">
+                        <p>For your cutting phase, we've included more metabolic conditioning and supersets to maintain muscle while increasing calorie burn.</p>
+                    </div>`;
+                }
+                
+                planHTML += `<h4>Optimized ${userData.workoutSplit} Split (${userData.workoutDays} days/week)</h4>`;
+                
+                // Generate different workout plans based on the split type
+                if (userData.workoutSplit === 'full-body') {
+                    planHTML += generateFullBodyPlan(userData);
+                } else if (userData.workoutSplit === 'upper-lower') {
+                    planHTML += generateUpperLowerPlan(userData);
+                } else if (userData.workoutSplit === 'push-pull-legs') {
+                    planHTML += generatePPLPlan(userData);
+                } else {
+                    planHTML += generateBodyPartPlan(userData);
+                }
+                
+                // Add weight and rep recommendations
+                planHTML += `
+                    <div class="exercise-recommendation">
+                        <h4>Weight and Rep Recommendations</h4>
+                        <p>Based on your fitness level and goals, here are recommended rep ranges for different training objectives:</p>
+                        
+                        <table class="weight-reps-table">
+                            <thead>
+                                <tr>
+                                    <th>Goal</th>
+                                    <th>Rep Range</th>
+                                    <th>Weight (% of 1RM)</th>
+                                    <th>Rest Period</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="goal-strength">Strength</td>
+                                    <td>1-6 reps</td>
+                                    <td>85-100%</td>
+                                    <td>3-5 minutes</td>
+                                </tr>
+                                <tr>
+                                    <td class="goal-hypertrophy">Muscle Growth</td>
+                                    <td>8-12 reps</td>
+                                    <td>70-85%</td>
+                                    <td>1-2 minutes</td>
+                                </tr>
+                                <tr>
+                                    <td class="goal-endurance">Endurance</td>
+                                    <td>15-20+ reps</td>
+                                    <td>50-70%</td>
+                                    <td>30-60 seconds</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                workoutPlan.innerHTML = planHTML;
+            }
+            
+            // Generate Beginner Workout Plan
+function generateBeginnerWorkoutPlan(userData) {
+    const workoutAnalysis = document.getElementById('workout-analysis');
+    const workoutPlan = document.getElementById('workout-plan');
+    
+    workoutAnalysis.innerHTML = `
+        <p>As a beginner, we'll focus on building a solid foundation with compound movements and proper form. 
+        Your ${userData.availableDays}-day plan is designed to be approachable while still challenging.</p>
+    `;
+    
+    let planHTML = `<h4>Beginner-Friendly ${userData.availableDays}-Day Plan</h4>`;
+    
+    // Generate a beginner-friendly plan based on available days
+    if (userData.availableDays <= 3) {
+        planHTML += generateBeginnerFullBodyPlan(userData);
+    } else {
+        planHTML += generateBeginnerSplitPlan(userData);
+    }
+    
+    workoutPlan.innerHTML = planHTML;
+}
+
+// Generate Nutrition Plan
+function generateNutritionPlan(userData) {
+    const nutritionSummary = document.getElementById('nutrition-summary');
+    const mealPlan = document.getElementById('meal-plan');
+    
+    // Calculate calorie needs based on user data and goals
+    const bmr = calculateBMR(userData);
+    let calorieTarget = 0;
+    
+    if (userData.nutritionGoal === 'bulk') {
+        calorieTarget = Math.round(bmr * 1.15); // 15% surplus
+    } else if (userData.nutritionGoal === 'cut') {
+        calorieTarget = Math.round(bmr * 0.85); // 15% deficit
+    } else {
+        calorieTarget = Math.round(bmr); // maintenance
+    }
+    
+    // Macronutrient distribution
+    let proteinPct, carbPct, fatPct;
+    
+    if (userData.nutritionGoal === 'bulk') {
+        proteinPct = 25;
+        carbPct = 50;
+        fatPct = 25;
+    } else if (userData.nutritionGoal === 'cut') {
+        proteinPct = 40;
+        carbPct = 30;
+        fatPct = 30;
+    } else {
+        proteinPct = 30;
+        carbPct = 40;
+        fatPct = 30;
+    }
+    
+    const proteinG = Math.round((calorieTarget * (proteinPct/100)) / 4);
+    const carbG = Math.round((calorieTarget * (carbPct/100)) / 4);
+    const fatG = Math.round((calorieTarget * (fatPct/100)) / 9);
+    
+    nutritionSummary.innerHTML = `
+        <p>Based on your ${userData.nutritionGoal} goal, we recommend:</p>
+        <p><strong>Daily Calories:</strong> ${calorieTarget} calories</p>
+        <p><strong>Protein:</strong> ${proteinG}g (${proteinPct}%)</p>
+        <p><strong>Carbohydrates:</strong> ${carbG}g (${carbPct}%)</p>
+        <p><strong>Fat:</strong> ${fatG}g (${fatPct}%)</p>
+    `;
+    
+    // Generate meal plan based on dietary preferences
+    mealPlan.innerHTML = generateMealPlanByPreference(userData, calorieTarget, proteinG, carbG, fatG);
+}
+
+// Calculate Basal Metabolic Rate (BMR)
+function calculateBMR(userData) {
+    // Mifflin-St Jeor Equation
+    let bmr = 0;
+    
+    if (userData.gender === 'male') {
+        bmr = 10 * userData.weight + 6.25 * userData.height - 5 * userData.age + 5;
+    } else {
+        bmr = 10 * userData.weight + 6.25 * userData.height - 5 * userData.age - 161;
+    }
+    
+    // Adjust for activity level based on workout frequency
+    let activityMultiplier = 1.2; // Sedentary
+    
+    if (userData.workoutDays >= 5 || userData.availableDays >= 5) {
+        activityMultiplier = 1.55; // Moderate to active
+    } else if (userData.workoutDays >= 3 || userData.availableDays >= 3) {
+        activityMultiplier = 1.375; // Lightly active
+    }
+    
+    return Math.round(bmr * activityMultiplier);
+}
+
+// Helper functions for generating specific workout plans
+function generateFullBodyPlan(userData) {
+    return `
+        <div class="workout-day">
+            <h4>Day 1: Full Body A</h4>
+            <div class="exercise">Squat: 4 sets x 6-8 reps</div>
+            <div class="exercise">Bench Press: 4 sets x 6-8 reps</div>
+            <div class="exercise">Barbell Row: 3 sets x 8-10 reps</div>
+            <div class="exercise">Overhead Press: 3 sets x 8-10 reps</div>
+            <div class="exercise">Bicep Curls: 3 sets x 10-12 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 2: Rest or Light Cardio</h4>
+        </div>
+        <div class="workout-day">
+            <h4>Day 3: Full Body B</h4>
+            <div class="exercise">Deadlift: 4 sets x 6-8 reps</div>
+            <div class="exercise">Incline Press: 4 sets x 8-10 reps</div>
+            <div class="exercise">Pull-ups/Lat Pulldown: 3 sets x 8-10 reps</div>
+            <div class="exercise">Leg Press: 3 sets x 10-12 reps</div>
+            <div class="exercise">Tricep Extensions: 3 sets x 10-12 reps</div>
+        </div>
+    `;
+}
+
+function generateUpperLowerPlan(userData) {
+    // Implementation for upper/lower split
+    return `
+        <div class="workout-day">
+            <h4>Day 1: Upper</h4>
+            <div class="exercise">Bench Press: 4 sets x 6-8 reps</div>
+            <div class="exercise">Barbell Row: 4 sets x 6-8 reps</div>
+            <div class="exercise">Overhead Press: 3 sets x 8-10 reps</div>
+            <div class="exercise">Pull-ups/Lat Pulldown: 3 sets x 8-10 reps</div>
+            <div class="exercise">Bicep Curls: 3 sets x 10-12 reps</div>
+            <div class="exercise">Tricep Extensions: 3 sets x 10-12 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 2: Lower</h4>
+            <div class="exercise">Squat: 4 sets x 6-8 reps</div>
+            <div class="exercise">Romanian Deadlift: 4 sets x 6-8 reps</div>
+            <div class="exercise">Leg Press: 3 sets x 8-10 reps</div>
+            <div class="exercise">Leg Curls: 3 sets x 10-12 reps</div>
+            <div class="exercise">Calf Raises: 4 sets x 12-15 reps</div>
+            <div class="exercise">Abs: 3 sets x 15-20 reps</div>
+        </div>
+    `;
+}
+
+function generatePPLPlan(userData) {
+    // Implementation for push/pull/legs split
+    return `
+        <div class="workout-day">
+            <h4>Day 1: Push</h4>
+            <div class="exercise">Bench Press: 4 sets x 6-8 reps</div>
+            <div class="exercise">Overhead Press: 3 sets x 8-10 reps</div>
+            <div class="exercise">Incline Dumbbell Press: 3 sets x 8-10 reps</div>
+            <div class="exercise">Lateral Raises: 3 sets x 12-15 reps</div>
+            <div class="exercise">Tricep Pushdowns: 3 sets x 10-12 reps</div>
+            <div class="exercise">Overhead Tricep Extensions: 3 sets x 10-12 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 2: Pull</h4>
+            <div class="exercise">Deadlift: 4 sets x 6-8 reps</div>
+            <div class="exercise">Pull-ups/Lat Pulldown: 4 sets x 8-10 reps</div>
+            <div class="exercise">Barbell Row: 3 sets x 8-10 reps</div>
+            <div class="exercise">Face Pulls: 3 sets x 12-15 reps</div>
+            <div class="exercise">Bicep Curls: 3 sets x 10-12 reps</div>
+            <div class="exercise">Hammer Curls: 3 sets x 10-12 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 3: Legs</h4>
+            <div class="exercise">Squat: 4 sets x 6-8 reps</div>
+            <div class="exercise">Leg Press: 3 sets x 8-10 reps</div>
+            <div class="exercise">Romanian Deadlift: 3 sets x 8-10 reps</div>
+            <div class="exercise">Leg Extensions: 3 sets x 10-12 reps</div>
+            <div class="exercise">Leg Curls: 3 sets x 10-12 reps</div>
+            <div class="exercise">Calf Raises: 4 sets x 15-20 reps</div>
+        </div>
+    `;
+}
+
+function generateBodyPartPlan(userData) {
+    // Implementation for body part split
+    return `
+        <div class="workout-day">
+            <h4>Day 1: Chest</h4>
+            <div class="exercise">Bench Press: 4 sets x 6-8 reps</div>
+            <div class="exercise">Incline Dumbbell Press: 4 sets x 8-10 reps</div>
+            <div class="exercise">Cable Flyes: 3 sets x 10-12 reps</div>
+            <div class="exercise">Dips: 3 sets x 8-10 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 2: Back</h4>
+            <div class="exercise">Deadlift: 4 sets x 6-8 reps</div>
+            <div class="exercise">Pull-ups/Lat Pulldown: 4 sets x 8-10 reps</div>
+            <div class="exercise">Barbell Row: 3 sets x 8-10 reps</div>
+            <div class="exercise">Cable Rows: 3 sets x 10-12 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 3: Legs</h4>
+            <div class="exercise">Squat: 4 sets x 6-8 reps</div>
+            <div class="exercise">Leg Press: 3 sets x 8-10 reps</div>
+            <div class="exercise">Romanian Deadlift: 3 sets x 8-10 reps</div>
+            <div class="exercise">Leg Extensions: 3 sets x 10-12 reps</div>
+            <div class="exercise">Leg Curls: 3 sets x 10-12 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 4: Shoulders & Arms</h4>
+            <div class="exercise">Overhead Press: 4 sets x 6-8 reps</div>
+            <div class="exercise">Lateral Raises: 3 sets x 12-15 reps</div>
+            <div class="exercise">Bicep Curls: 3 sets x 10-12 reps</div>
+            <div class="exercise">Tricep Extensions: 3 sets x 10-12 reps</div>
+        </div>
+    `;
+}
+
+function generateBeginnerFullBodyPlan(userData) {
+    return `
+        <div class="workout-day">
+            <h4>Day 1: Full Body</h4>
+            <div class="exercise">Goblet Squats: 3 sets x 10-12 reps</div>
+            <div class="exercise">Push-ups (or Bench Press): 3 sets x 10-12 reps</div>
+            <div class="exercise">Dumbbell Rows: 3 sets x 10-12 reps</div>
+            <div class="exercise">Shoulder Press: 3 sets x 10-12 reps</div>
+            <div class="exercise">Planks: 3 sets x 30 seconds</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 2: Rest or Light Cardio</h4>
+            <div class="exercise">20-30 minutes walking, cycling, or swimming</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 3: Full Body</h4>
+            <div class="exercise">Lunges: 3 sets x 10-12 reps per leg</div>
+            <div class="exercise">Dumbbell Chest Press: 3 sets x 10-12 reps</div>
+            <div class="exercise">Lat Pulldowns: 3 sets x 10-12 reps</div>
+            <div class="exercise">Lateral Raises: 3 sets x 12-15 reps</div>
+            <div class="exercise">Bicycle Crunches: 3 sets x 15-20 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 4: Rest or Light Cardio</h4>
+            <div class="exercise">20-30 minutes walking, cycling, or swimming</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 5: Full Body</h4>
+            <div class="exercise">Romanian Deadlifts: 3 sets x 10-12 reps</div>
+            <div class="exercise">Incline Push-ups: 3 sets x 10-12 reps</div>
+            <div class="exercise">Seated Cable Rows: 3 sets x 10-12 reps</div>
+            <div class="exercise">Dumbbell Curls: 3 sets x 12-15 reps</div>
+            <div class="exercise">Plank to Side Plank: 3 sets x 30 seconds each side</div>
+        </div>
+    `;
+}
+
+function generateBeginnerSplitPlan(userData) {
+    return `
+        <div class="workout-day">
+            <h4>Day 1: Upper Body</h4>
+            <div class="exercise">Push-ups (or Bench Press): 3 sets x 10-12 reps</div>
+            <div class="exercise">Dumbbell Rows: 3 sets x 10-12 reps</div>
+            <div class="exercise">Shoulder Press: 3 sets x 10-12 reps</div>
+            <div class="exercise">Lat Pulldowns: 3 sets x 10-12 reps</div>
+            <div class="exercise">Tricep Dips: 3 sets x 10-12 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 2: Lower Body</h4>
+            <div class="exercise">Goblet Squats: 3 sets x 10-12 reps</div>
+            <div class="exercise">Romanian Deadlifts: 3 sets x 10-12 reps</div>
+            <div class="exercise">Lunges: 3 sets x 10-12 reps per leg</div>
+            <div class="exercise">Leg Press: 3 sets x 12-15 reps</div>
+            <div class="exercise">Calf Raises: 3 sets x 15-20 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 3: Rest or Light Cardio</h4>
+            <div class="exercise">20-30 minutes walking, cycling, or swimming</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 4: Upper Body</h4>
+            <div class="exercise">Incline Dumbbell Press: 3 sets x 10-12 reps</div>
+            <div class="exercise">Cable Rows: 3 sets x 10-12 reps</div>
+            <div class="exercise">Lateral Raises: 3 sets x 12-15 reps</div>
+            <div class="exercise">Face Pulls: 3 sets x 12-15 reps</div>
+            <div class="exercise">Bicep Curls: 3 sets x 12-15 reps</div>
+        </div>
+        <div class="workout-day">
+            <h4>Day 5: Lower Body & Core</h4>
+            <div class="exercise">Leg Extensions: 3 sets x 12-15 reps</div>
+            <div class="exercise">Leg Curls: 3 sets x 12-15 reps</div>
+            <div class="exercise">Hip Thrusts: 3 sets x 12-15 reps</div>
+            <div class="exercise">Planks: 3 sets x 30-45 seconds</div>
+            <div class="exercise">Russian Twists: 3 sets x 15-20 reps</div>
+        </div>
+    `;
+}
+function generateMealPlanByPreference(userData, calorieTarget, proteinG, carbG, fatG) {
+    let mealPlanHTML = '';
+    
+    if (userData.dietaryPreferences === 'vegetarian') {
+        mealPlanHTML = `
+            <div class="meal">
+                <h4>Breakfast (~${Math.round(calorieTarget * 0.25)} calories)</h4>
+                <p>Greek yogurt with berries and granola</p>
+                <p>2 whole eggs with spinach and feta cheese</p>
+                <p>1 slice whole grain toast</p>
+            </div>
+            <div class="meal">
+                <h4>Lunch (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Quinoa bowl with roasted vegetables</p>
+                <p>Cottage cheese (1 cup)</p>
+                <p>Mixed nuts (small handful)</p>
+            </div>
+            <div class="meal">
+                <h4>Pre-Workout Snack (~${Math.round(calorieTarget * 0.15)} calories)</h4>
+                <p>Protein smoothie with milk, banana, and protein powder</p>
+                <p>Apple with almond butter</p>
+            </div>
+            <div class="meal">
+                <h4>Dinner (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Lentil pasta with tomato sauce and vegetarian meatballs</p>
+                <p>Large mixed salad with olive oil dressing</p>
+                <p>Steamed broccoli</p>
+            </div>
+        `;
+    } else if (userData.dietaryPreferences === 'vegan') {
+        mealPlanHTML = `
+            <div class="meal">
+                <h4>Breakfast (~${Math.round(calorieTarget * 0.25)} calories)</h4>
+                <p>Overnight oats with plant milk, chia seeds, and berries</p>
+                <p>Plant-based protein shake</p>
+                <p>Sliced avocado on whole grain toast</p>
+            </div>
+            <div class="meal">
+                <h4>Lunch (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Buddha bowl with quinoa, roasted chickpeas, and vegetables</p>
+                <p>Hummus with carrot and cucumber sticks</p>
+                <p>Mixed nuts (small handful)</p>
+            </div>
+            <div class="meal">
+                <h4>Pre-Workout Snack (~${Math.round(calorieTarget * 0.15)} calories)</h4>
+                <p>Protein smoothie with plant milk, banana, and vegan protein</p>
+                <p>Rice cakes with almond butter</p>
+            </div>
+            <div class="meal">
+                <h4>Dinner (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Tofu stir-fry with brown rice and mixed vegetables</p>
+                <p>Large mixed salad with avocado and lemon dressing</p>
+                <p>Steamed broccoli with nutritional yeast</p>
+            </div>
+        `;
+    } else if (userData.dietaryPreferences === 'keto') {
+        mealPlanHTML = `
+            <div class="meal">
+                <h4>Breakfast (~${Math.round(calorieTarget * 0.25)} calories)</h4>
+                <p>Scrambled eggs with cheese, spinach, and avocado</p>
+                <p>Bacon or turkey bacon (2-3 slices)</p>
+                <p>Coffee with heavy cream or MCT oil</p>
+            </div>
+            <div class="meal">
+                <h4>Lunch (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Chicken Caesar salad (no croutons)</p>
+                <p>Olive oil and vinegar dressing</p>
+                <p>Macadamia nuts (small handful)</p>
+            </div>
+            <div class="meal">
+                <h4>Pre-Workout Snack (~${Math.round(calorieTarget * 0.15)} calories)</h4>
+                <p>String cheese (2 pieces)</p>
+                <p>Pepperoni slices or beef jerky</p>
+            </div>
+            <div class="meal">
+                <h4>Dinner (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Grilled salmon with herb butter</p>
+                <p>Cauliflower rice</p>
+                <p>Asparagus sautéed in olive oil</p>
+            </div>
+        `;
+    } else if (userData.dietaryPreferences === 'paleo') {
+        mealPlanHTML = `
+            <div class="meal">
+                <h4>Breakfast (~${Math.round(calorieTarget * 0.25)} calories)</h4>
+                <p>Sweet potato hash with ground turkey and bell peppers</p>
+                <p>2 whole eggs</p>
+                <p>Sliced avocado</p>
+            </div>
+            <div class="meal">
+                <h4>Lunch (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Grilled chicken breast with mixed greens salad</p>
+                <p>Olive oil and lemon dressing</p>
+                <p>Mixed berries</p>
+            </div>
+            <div class="meal">
+                <h4>Pre-Workout Snack (~${Math.round(calorieTarget * 0.15)} calories)</h4>
+                <p>Apple with almond butter</p>
+                <p>Beef jerky (1 serving)</p>
+            </div>
+            <div class="meal">
+                <h4>Dinner (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Grass-fed steak or wild-caught fish</p>
+                <p>Roasted vegetables (Brussels sprouts, carrots)</p>
+                <p>Baked sweet potato with coconut oil</p>
+            </div>
+        `;
+    } else {
+        // Default/no specific preferences
+        mealPlanHTML = `
+            <div class="meal">
+                <h4>Breakfast (~${Math.round(calorieTarget * 0.25)} calories)</h4>
+                <p>Oatmeal with whey protein, banana, and peanut butter</p>
+                <p>2 whole eggs</p>
+                <p>1 slice whole grain toast</p>
+            </div>
+            <div class="meal">
+                <h4>Lunch (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Grilled chicken breast with brown rice</p>
+                <p>Mixed vegetables</p>
+                <p>Olive oil (1 tbsp)</p>
+            </div>
+            <div class="meal">
+                <h4>Pre-Workout Snack (~${Math.round(calorieTarget * 0.15)} calories)</h4>
+                <p>Protein shake with banana</p>
+                <p>Apple with peanut butter</p>
+            </div>
+            <div class="meal">
+                <h4>Dinner (~${Math.round(calorieTarget * 0.3)} calories)</h4>
+                <p>Lean beef, turkey, or fish</p>
+                <p>Sweet or regular potato</p>
+                <p>Large mixed salad with olive oil dressing</p>
+                <p>Steamed broccoli or green beans</p>
+            </div>
+        `;
+    }
+    
+    // Add a note about macros
+    mealPlanHTML += `
+        <div class="info-box">
+            <p>This meal plan is designed to hit approximately ${calorieTarget} calories with ${proteinG}g protein, ${carbG}g carbs, and ${fatG}g fat. Adjust portion sizes as needed to match your specific calorie and macro targets.</p>
+            <p>Drink at least 2-3 liters of water daily, and consider timing your protein intake around your workouts for optimal results.</p>
+        </div>
+    `;
+    return mealPlanHTML;
+}
+});
+    </script>
+</body>
+</html>
+
+
